@@ -1,7 +1,7 @@
 # Trade off between FDR and PR in model selection
 
 This repository provides codes that generated the data and figures presented in the paper [Trade-off between predictive performance and FDR control for high-dimensional Gaussian model selection](https://arxiv.org/abs/2302.01831).
-In particular, the repository contains the implementation of the proposed algorithm.
+In particular, it contains the implementation of the proposed algorithm.
 
 ## Summary
 
