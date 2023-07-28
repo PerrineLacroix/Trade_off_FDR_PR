@@ -1,4 +1,4 @@
-# This function source applies the R function source "cste_mult_variation_LS_PR_FDR" on each available model collection
+# This function source applies the R function source "cste_mult_variation_LS_PR_FDR" on each available deterministic ordered model collection
 empirical_estimation <- function(cste_mult_vect,nbr_it,n,p,sigma_2,path_collection,Y_metric_matrix,data_select,data_metric){
   PR_FDP_hat_K <- list()
   time.in = Sys.time() 
