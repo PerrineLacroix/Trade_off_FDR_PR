@@ -1,6 +1,6 @@
 ## script to launch simulations
 ## author : perrine lacroix
-## date : March, 10 2021
+## date : April, 10 2024
 
 ## This code is the main R script. 
 ## From the created data sets and the generated model collections (from Git_multiplicative_constant_K_creation_data_and_collection.R and Git_multiplicative_constant_K_collection_non_ordered.R R functions),
@@ -16,7 +16,6 @@ prefix = "~/Documents/GitHub/Trade_off_FDR_PR"
 
 # Packages loading
 library(xtable)
-library(ggplot2)
 library(capushe)
 library(LINselect)
 library(knockoff)
@@ -90,7 +89,6 @@ if (random_collection == TRUE){
   path_collection <- path_collection_random
   path_collection_bounds <- path_collection_bounds_random
 }
-
 
 
 #####################################################################################################################
@@ -181,6 +179,7 @@ load(paste("upper_bounds_all",config_data,sep="_"))
 # load(paste("larger_noise_closed_values_lower_bounds_all",config_data,sep="_"))    # the configuration 3 of the scenario (ii)  of the article
 # load(paste("larger_noise_closed_values_upper_bounds_all",config_data,sep="_"))    # the configuration 3 of the scenario (ii)  of the article
 
+description_parameters = paste0(paste("sigma2",sigma_2,"p",p,"n",n,sep="_"),".RData")
 pente_parameters = paste("final_upper_and_lower_bound_of_FDR",description_parameters,sep="_")
 # pente_parameters = paste("final_upper_and_lower_bound_of_FDR_smaller_noise",description_parameters,sep="_")    # the configuration 2 of the scenario (ii)  of the article
 # pente_parameters = paste("final_upper_and_lower_bound_of_FDR_larger_noise",description_parameters,sep="_")    # the configuration 3 of the scenario (ii)  of the article
@@ -235,7 +234,7 @@ for (k in index_plot){
          col = c(2,4,3,1), lty = 1, cex=1.1, lwd = c(4,4,4,4,4))
 }
 
-##### Plot of the Empirical FDR and PR valus with respect to K
+##### Plot of the Empirical FDR and PR values with respect to K
 for (k in index_plot){
   vect_empirical_FDR <- sapply(1:length(cste_mult_vect), function(it) mean(PR_FDP_hat_K[[k]]$empirical$FDP_hat[,it]))   # empirical FDR
   vect_empirical_PR <- sapply(1:length(cste_mult_vect), function(it) mean(PR_FDP_hat_K[[k]]$empirical$PR_hat[,it]))    # empirical PR
@@ -243,16 +242,30 @@ for (k in index_plot){
   plot(cste_mult_vect,vect_empirical_FDR, col = 2,xlab = "K",ylim=c(0,1),ylab = NA,type= "p", lty = 5, cex.lab = 1.3, lwd = 3)
   lines(cste_mult_vect,vect_empirical_FDR, col = 2,type="l", lwd = 3)
   legend("topright", legend = c("empirical FDR"), col = c(2), lty = 1, cex=1.1, lwd = c(4))
+  abline(v=3,lwd=2)
   plot(cste_mult_vect,vect_empirical_PR, col = 4, type= "p", lty = 5,xlab = "K",ylab = NA,cex.lab = 1.3, lwd = 3)
   lines(cste_mult_vect,vect_empirical_PR, col = 4,type="l", lwd = 3)
   legend("topright", legend = c("empirical PR"), col = c(4), lty = 1, cex=1, lwd = c(4))
+  abline(v=3,lwd=2)
+}
+
+##### Values of the Empirical FDR and PR values with respect to K
+for (k in index_plot){
+  if (ordered_variable == TRUE){
+    matrix_selection_1 <- matrix(0, nrow = 2, ncol = 11)
+    colnames(matrix_selection_1) <- c("0.1","1","2","3","4","5","6","7","8","9","10")
+    rownames(matrix_selection_1) <- c("empirical FDR(m_Hat)","empirical PR(m_Hat)")
+    matrix_selection_1[1,] <- sapply(1:length(cste_mult_vect), function(it) mean(PR_FDP_hat_K[[k]]$empirical$FDP_hat[,it]))[c(1,3,5,8,10,12,14,16,18,19,21)]   # empirical FDR
+    matrix_selection_1[2,] <- sapply(1:length(cste_mult_vect), function(it) mean(PR_FDP_hat_K[[k]]$empirical$PR_hat[,it]))[c(1,3,5,8,10,12,14,16,18,19,21)]
+    xtable(matrix_selection_1, type = "latex", file = "matrice.tex",digits=2)
+  }
 }
 
 
 ###### Plot of the estimated FDR and PR (calculated on only one dataset) with respect to K
 sequence_temp <- seq(1,length(list_lower_bounds$lower_bound_list_hat_one_dataset_K2_list_slope[[1]][[1]]), by=2)
 for (k in index_plot){
-  vect_estimation_diff_PR <- PR_FDP_hat_K[[k]]$unknown_variance$diff_PR_one_dataset_slope    # estimated difference in predictions 
+  vect_estimation_diff_PR <- PR_FDP_hat_K[[k]]$unknown_variance$diff_PR_one_dataset_slope    # estimated difference in predictions
   par(mfrow=c(1,2))
   plot(cste_mult_vect,as.numeric(list_upper_bounds$upper_bound_list_hat_one_dataset_K4_list_slope[[k]][[1]][sequence_temp]),xlab = "K",ylab = "estimated upper bound of FDR on one dataset",type="p", col = 6)
   lines(cste_mult_vect,as.numeric(list_upper_bounds$upper_bound_list_hat_one_dataset_K4_list_slope[[k]][[1]][sequence_temp]),type="l", col = 6)
@@ -297,8 +310,8 @@ sequence_temp <- seq(1,length(list_lower_bounds$lower_bound_list_hat_one_dataset
 for (k in index_plot){
   vect_empirical_FDR <- sapply(1:length(cste_mult_vect), function(it) mean(PR_FDP_hat_K[[k]]$empirical$FDP_hat[,it]))     # empirical FDR
   vect_empirical_PR <- sapply(1:length(cste_mult_vect), function(it) mean(PR_FDP_hat_K[[k]]$empirical$PR_hat[,it]))     # empirical PR
-  vect_empirical_diff_PR <- vect_empirical_PR - vect_empirical_PR[which(cste_mult_vect==2)]       # empirical difference in predictions 
-  vect_estimation_diff_PR <- PR_FDP_hat_K[[k]]$unknown_variance$diff_PR_one_dataset_slope         # estimated difference in predictions 
+  vect_empirical_diff_PR <- vect_empirical_PR - vect_empirical_PR[which(cste_mult_vect==2)]       # empirical difference in predictions
+  vect_estimation_diff_PR <- PR_FDP_hat_K[[k]]$unknown_variance$diff_PR_one_dataset_slope         # estimated difference in predictions
   par(mfrow=c(1,2))
   plot(cste_mult_vect[which_cste_sup2],vect_empirical_FDR[which_cste_sup2], col = 2,xlab = "K",ylim=c(0,max(as.numeric(list_upper_bounds$upper_bound_list_hat_one_dataset_K4_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2])),
        ylab = NA,type= "p", lty = 5, cex.lab = 1.2, lwd = 2)
@@ -352,6 +365,7 @@ dev.off()
 ###### Plottings for evaluations of the upper and lower bounds
 #####################################################################################################################
 
+
 ###### FDR, theoretical lower bound and estimated lower bounds functions with respect to K
 which_cste_sup2 <- which(cste_mult_vect>=2)
 sequence_temp <- seq(1,length(list_lower_bounds$lower_bound_list_hat_one_dataset_K2_list_slope[[1]][[1]]), by=2)
@@ -360,91 +374,48 @@ for (k in index_plot){
   par(mfrow=c(1,1))
   colfunc<-colorRampPalette(c("red","yellow","springgreen","#196F3D"))
   colors <- c(heat.colors(300)[1:100],topo.colors(300)[1:100],terrain.colors(300)[1:100])
-  plot(cste_mult_vect[which_cste_sup2],vect_empirical_FDR[which_cste_sup2],col = colors[1],type="p",xlim = c(2,10),xlab = "K",ylab = NA, lty = 5,lwd=2,cex.lab = 1.3,pch=1)
-  lines(cste_mult_vect[which_cste_sup2],vect_empirical_FDR[which_cste_sup2],lwd=2,col = colors[1],type="l",pch=1)
-  lines(cste_mult_vect[which_cste_sup2],list_lower_bounds$lower_bound_list[[k]][which_cste_sup2],pch=3,lwd=2, col = colors[100], type="p")
-  lines(cste_mult_vect[which_cste_sup2],list_lower_bounds$lower_bound_list[[k]][which_cste_sup2],pch=3,lwd=2, col = colors[100], type="l")
-  lines(cste_mult_vect[which_cste_sup2],as.numeric(list_lower_bounds$lower_bound_list_hat_one_dataset_K1_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2, col = colors[200], type = "p")
-  lines(cste_mult_vect[which_cste_sup2],as.numeric(list_lower_bounds$lower_bound_list_hat_one_dataset_K1_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2, col = colors[200], type = "l")
-
-  lines(cste_mult_vect[which_cste_sup2],vect_empirical_FDR[which_cste_sup2],pch=1,col = colors[11],type="p",lwd=2,xlim = c(2,10),xlab = "K",ylab = "empirical FDR and lower bounds", lty = 5)
-  lines(cste_mult_vect[which_cste_sup2],vect_empirical_FDR[which_cste_sup2],pch=1,col = colors[11],type="l",lwd=2)
-  lines(cste_mult_vect[which_cste_sup2],list_lower_bounds$lower_bound_list[[k]][which_cste_sup2],pch=3, col = colors[111], type="p",lwd=2)
-  lines(cste_mult_vect[which_cste_sup2],list_lower_bounds$lower_bound_list[[k]][which_cste_sup2],pch=3, col = colors[111], type="l",lwd=2)
-  lines(cste_mult_vect[which_cste_sup2],as.numeric(list_lower_bounds$lower_bound_list_hat_one_dataset_K1.5_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2, col = colors[211], type = "p")
-  lines(cste_mult_vect[which_cste_sup2],as.numeric(list_lower_bounds$lower_bound_list_hat_one_dataset_K1.5_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2, col = colors[211], type = "l")
-
-  lines(cste_mult_vect[which_cste_sup2],vect_empirical_FDR[which_cste_sup2],pch=1, cex = 1,col = colors[21],type="p",xlim = c(2,10),xlab = "K",lwd=2,ylab = "empirical FDR and lower bounds", lty = 5)
-  lines(cste_mult_vect[which_cste_sup2],vect_empirical_FDR[which_cste_sup2],pch=1, cex = 1,col = colors[21],type="l",lwd=2)
-  lines(cste_mult_vect[which_cste_sup2],list_lower_bounds$lower_bound_list[[k]][which_cste_sup2],pch=3, cex = 1, col = colors[121], type="p",lwd=2)
-  lines(cste_mult_vect[which_cste_sup2],list_lower_bounds$lower_bound_list[[k]][which_cste_sup2],pch=3, cex = 1, col = colors[121], type="l",lwd=2)
-  lines(cste_mult_vect[which_cste_sup2],as.numeric(list_lower_bounds$lower_bound_list_hat_one_dataset_K2_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2, cex = 1, col = colors[221], type = "p")
-  lines(cste_mult_vect[which_cste_sup2],as.numeric(list_lower_bounds$lower_bound_list_hat_one_dataset_K2_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2, cex = 1, col = colors[221], type = "l")
-
-  lines(cste_mult_vect[which_cste_sup2],vect_empirical_FDR[which_cste_sup2],pch=1, cex = 1,col = colors[31],type="p",xlim = c(2,10),lwd=2,xlab = "K",ylab = "empirical FDR and lower bounds", lty = 5)
-  lines(cste_mult_vect[which_cste_sup2],vect_empirical_FDR[which_cste_sup2],pch=1, cex = 1,col = colors[31],type="l",lwd=2)
-  lines(cste_mult_vect[which_cste_sup2],list_lower_bounds$lower_bound_list[[k]][which_cste_sup2],pch=3, cex = 1, col = colors[131], type="p",lwd=2)
-  lines(cste_mult_vect[which_cste_sup2],list_lower_bounds$lower_bound_list[[k]][which_cste_sup2],pch=3, cex = 1, col = colors[131], type="l",lwd=2)
-  lines(cste_mult_vect[which_cste_sup2],as.numeric(list_lower_bounds$lower_bound_list_hat_one_dataset_K2.5_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2, cex = 1, col = colors[231], type = "p")
-  lines(cste_mult_vect[which_cste_sup2],as.numeric(list_lower_bounds$lower_bound_list_hat_one_dataset_K2.5_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2, cex = 1, col = colors[231], type = "l")
-
-  lines(cste_mult_vect[which_cste_sup2],vect_empirical_FDR[which_cste_sup2],pch=1, cex = 1,col = colors[41],type="p",lwd=2,xlim = c(2,10),xlab = "K",ylab = "empirical FDR and lower bounds", lty = 5)
-  lines(cste_mult_vect[which_cste_sup2],vect_empirical_FDR[which_cste_sup2],pch=1, cex = 1,col = colors[41],type="l",lwd=2)
-  lines(cste_mult_vect[which_cste_sup2],list_lower_bounds$lower_bound_list[[k]][which_cste_sup2],pch=3, cex = 1, col = colors[141], type="p",lwd=2)
-  lines(cste_mult_vect[which_cste_sup2],list_lower_bounds$lower_bound_list[[k]][which_cste_sup2],pch=3, cex = 1, col = colors[141], type="l",lwd=2)
-  lines(cste_mult_vect[which_cste_sup2],as.numeric(list_lower_bounds$lower_bound_list_hat_one_dataset_K3_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2, cex = 1, col = colors[241], type = "p")
-  lines(cste_mult_vect[which_cste_sup2],as.numeric(list_lower_bounds$lower_bound_list_hat_one_dataset_K3_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2, cex = 1, col = colors[241], type = "l")
-
-  lines(cste_mult_vect[which_cste_sup2],vect_empirical_FDR[which_cste_sup2],pch=1,cex = 1,col = colors[51],type="p",xlim = c(2,10),lwd=2,xlab = "K",ylab = "empirical FDR and lower bounds", lty = 5)
-  lines(cste_mult_vect[which_cste_sup2],vect_empirical_FDR[which_cste_sup2],pch=1,cex = 1,col = colors[51],type="l",lwd=2)
-  lines(cste_mult_vect[which_cste_sup2],list_lower_bounds$lower_bound_list[[k]][which_cste_sup2],pch=3,cex = 1, col = colors[151], type="p",lwd=2)
-  lines(cste_mult_vect[which_cste_sup2],list_lower_bounds$lower_bound_list[[k]][which_cste_sup2],pch=3,cex = 1, col = colors[151], type="l",lwd=2)
-  lines(cste_mult_vect[which_cste_sup2],as.numeric(list_lower_bounds$lower_bound_list_hat_one_dataset_K3.5_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2,cex = 1, col = colors[251], type = "p")
-  lines(cste_mult_vect[which_cste_sup2],as.numeric(list_lower_bounds$lower_bound_list_hat_one_dataset_K3.5_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2,cex = 1, col = colors[251], type = "l")
-
-  lines(cste_mult_vect[which_cste_sup2],vect_empirical_FDR[which_cste_sup2],pch=1,cex = 1,col = colors[61],type="p",xlim = c(2,10),lwd=2,xlab = "K",ylab = "empirical FDR and lower bounds", lty = 5)
-  lines(cste_mult_vect[which_cste_sup2],vect_empirical_FDR[which_cste_sup2],pch=1,cex = 1,col = colors[61],type="l",lwd=2)
-  lines(cste_mult_vect[which_cste_sup2],list_lower_bounds$lower_bound_list[[k]][which_cste_sup2],pch=3,cex = 1, col = colors[161], type="p",lwd=2)
-  lines(cste_mult_vect[which_cste_sup2],list_lower_bounds$lower_bound_list[[k]][which_cste_sup2],pch=3,cex = 1, col = colors[161], type="l",lwd=2)
-  lines(cste_mult_vect[which_cste_sup2],as.numeric(list_lower_bounds$lower_bound_list_hat_one_dataset_Klog_n_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2,cex = 1, col = colors[261], type = "p")
-  lines(cste_mult_vect[which_cste_sup2],as.numeric(list_lower_bounds$lower_bound_list_hat_one_dataset_Klog_n_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2,cex = 1, col = colors[261], type = "l")
-
-  lines(cste_mult_vect[which_cste_sup2],vect_empirical_FDR[which_cste_sup2],pch=1,cex = 1,col = colors[71],type="p",xlim = c(2,10),lwd=2,xlab = "K",ylab = "empirical FDR and lower bounds", lty = 5)
-  lines(cste_mult_vect[which_cste_sup2],vect_empirical_FDR[which_cste_sup2],pch=1,cex = 1,col = colors[71],type="l",lwd=2)
-  lines(cste_mult_vect[which_cste_sup2],list_lower_bounds$lower_bound_list[[k]][which_cste_sup2],pch=3,cex = 1, col = colors[171], type="p",lwd=2)
-  lines(cste_mult_vect[which_cste_sup2],list_lower_bounds$lower_bound_list[[k]][which_cste_sup2],pch=3,cex = 1, col = colors[171], type="l",lwd=2)
-  lines(cste_mult_vect[which_cste_sup2],as.numeric(list_lower_bounds$lower_bound_list_hat_one_dataset_K4_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2,cex = 1, col = colors[271], type = "p")
-  lines(cste_mult_vect[which_cste_sup2],as.numeric(list_lower_bounds$lower_bound_list_hat_one_dataset_K4_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2,cex = 1, col = colors[271], type = "l")
-
-  lines(cste_mult_vect[which_cste_sup2],vect_empirical_FDR[which_cste_sup2],pch=1,cex = 1,col = colors[81],type="p",xlim = c(2,10),lwd=2,xlab = "K",ylab = "empirical FDR and lower bounds", lty = 5)
-  lines(cste_mult_vect[which_cste_sup2],vect_empirical_FDR[which_cste_sup2],pch=1,cex = 1,col = colors[81],type="l",lwd=2)
-  lines(cste_mult_vect[which_cste_sup2],list_lower_bounds$lower_bound_list[[k]][which_cste_sup2],pch=3,cex = 1, col = colors[181], type="p",lwd=2)
-  lines(cste_mult_vect[which_cste_sup2],list_lower_bounds$lower_bound_list[[k]][which_cste_sup2],pch=3,cex = 1, col = colors[181], type="l",lwd=2)
-  lines(cste_mult_vect[which_cste_sup2],as.numeric(list_lower_bounds$lower_bound_list_hat_one_dataset_K4.5_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2,cex = 1, col = colors[281], type = "p")
-  lines(cste_mult_vect[which_cste_sup2],as.numeric(list_lower_bounds$lower_bound_list_hat_one_dataset_K4.5_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2,cex = 1, col = colors[281], type = "l")
-
-  lines(cste_mult_vect[which_cste_sup2],vect_empirical_FDR[which_cste_sup2],pch=1,cex = 1,col = colors[91],type="p",xlim = c(2,10),lwd=2,xlab = "K",ylab = "empirical FDR and lower bounds", lty = 5)
-  lines(cste_mult_vect[which_cste_sup2],vect_empirical_FDR[which_cste_sup2],pch=1,cex = 1,col = colors[91],type="l",lwd=2)
-  lines(cste_mult_vect[which_cste_sup2],list_lower_bounds$lower_bound_list[[k]][which_cste_sup2],pch=3,cex = 1, col = colors[191], type="p",lwd=2)
-  lines(cste_mult_vect[which_cste_sup2],list_lower_bounds$lower_bound_list[[k]][which_cste_sup2],pch=3,cex = 1, col = colors[191], type="l",lwd=2)
-  lines(cste_mult_vect[which_cste_sup2],as.numeric(list_lower_bounds$lower_bound_list_hat_one_dataset_K5_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2,cex = 1, col = colors[291], type = "p")
-  lines(cste_mult_vect[which_cste_sup2],as.numeric(list_lower_bounds$lower_bound_list_hat_one_dataset_K5_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2,cex = 1, col = colors[291], type = "l")
-
+  plot(cste_mult_vect[which_cste_sup2],vect_empirical_FDR[which_cste_sup2],col = colors[1],type="p",xlim = c(2,10),xlab = "K",ylab = NA, lty = 5,lwd=4,cex.lab = 1.8,pch=1)
+  lines(cste_mult_vect[which_cste_sup2],vect_empirical_FDR[which_cste_sup2],lwd=4,col = colors[1],type="l",pch=1)
+  lines(cste_mult_vect[which_cste_sup2],list_lower_bounds$lower_bound_list[[k]][which_cste_sup2],pch=3,lwd=4, col = colors[100], type="p")
+  lines(cste_mult_vect[which_cste_sup2],list_lower_bounds$lower_bound_list[[k]][which_cste_sup2],pch=3,lwd=4, col = colors[100], type="l")
+  lines(cste_mult_vect[which_cste_sup2],as.numeric(list_lower_bounds$lower_bound_list_hat_one_dataset_K1_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=4, col = colors[200], type = "p")
+  lines(cste_mult_vect[which_cste_sup2],as.numeric(list_lower_bounds$lower_bound_list_hat_one_dataset_K1_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=4, col = colors[200], type = "l")
+  #lines(cste_mult_vect[which_cste_sup2],as.numeric(list_lower_bounds$lower_bound_list_hat_one_dataset_K5_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=4, col = colors[141], type = "p")
+  lines(cste_mult_vect[which_cste_sup2],as.numeric(list_lower_bounds$lower_bound_list_hat_one_dataset_K2_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=4, cex = 1, col = colors[211], type = "p")
+  lines(cste_mult_vect[which_cste_sup2],as.numeric(list_lower_bounds$lower_bound_list_hat_one_dataset_K2_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=4, cex = 1, col = colors[211], type = "l")
+  #lines(cste_mult_vect[which_cste_sup2],as.numeric(list_lower_bounds$lower_bound_list_hat_one_dataset_K5_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=4, col = colors[141], type = "l")
+  # lines(cste_mult_vect[which_cste_sup2],as.numeric(list_lower_bounds$lower_bound_list_hat_one_dataset_K1.5_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2, col = colors[211], type = "p")
+  # lines(cste_mult_vect[which_cste_sup2],as.numeric(list_lower_bounds$lower_bound_list_hat_one_dataset_K1.5_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2, col = colors[211], type = "l")
+  # lines(cste_mult_vect[which_cste_sup2],as.numeric(list_lower_bounds$lower_bound_list_hat_one_dataset_K2.5_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2, cex = 1, col = colors[231], type = "p")
+  # lines(cste_mult_vect[which_cste_sup2],as.numeric(list_lower_bounds$lower_bound_list_hat_one_dataset_K2.5_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2, cex = 1, col = colors[231], type = "l")
+  # lines(cste_mult_vect[which_cste_sup2],as.numeric(list_lower_bounds$lower_bound_list_hat_one_dataset_K3_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2, cex = 1, col = colors[241], type = "p")
+  # lines(cste_mult_vect[which_cste_sup2],as.numeric(list_lower_bounds$lower_bound_list_hat_one_dataset_K3_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2, cex = 1, col = colors[241], type = "l")
+  # lines(cste_mult_vect[which_cste_sup2],as.numeric(list_lower_bounds$lower_bound_list_hat_one_dataset_K3.5_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2,cex = 1, col = colors[251], type = "p")
+  # lines(cste_mult_vect[which_cste_sup2],as.numeric(list_lower_bounds$lower_bound_list_hat_one_dataset_K3.5_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2,cex = 1, col = colors[251], type = "l")
+  # lines(cste_mult_vect[which_cste_sup2],as.numeric(list_lower_bounds$lower_bound_list_hat_one_dataset_Klog_n_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2,cex = 1, col = colors[261], type = "p")
+  # lines(cste_mult_vect[which_cste_sup2],as.numeric(list_lower_bounds$lower_bound_list_hat_one_dataset_Klog_n_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2,cex = 1, col = colors[261], type = "l")
+  # lines(cste_mult_vect[which_cste_sup2],as.numeric(list_lower_bounds$lower_bound_list_hat_one_dataset_K4_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2,cex = 1, col = colors[271], type = "p")
+  # lines(cste_mult_vect[which_cste_sup2],as.numeric(list_lower_bounds$lower_bound_list_hat_one_dataset_K4_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2,cex = 1, col = colors[271], type = "l")
+  # lines(cste_mult_vect[which_cste_sup2],as.numeric(list_lower_bounds$lower_bound_list_hat_one_dataset_K4.5_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2,cex = 1, col = colors[281], type = "p")
+  # lines(cste_mult_vect[which_cste_sup2],as.numeric(list_lower_bounds$lower_bound_list_hat_one_dataset_K4.5_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2,cex = 1, col = colors[281], type = "l")
   abline(h=0,col="black",lty=2)
-  legend("topright", legend = c("empirical FDR","b","estimated b","with 4"),
-                   col = c(1,1,1), cex=1.2, lwd = c(4,4,4,0),
-         pch = c(1,3,4),lty = c(1,1,1,rep(0,10)))
-
-  plot(cste_mult_vect,vect_empirical_FDR,col = 2,type="p",xlim = c(0.1,10),ylim=c(0,1),xlab = "K",ylab = NA,lty = 5, lwd=2, cex.lab = 1.3, pch = 2,cex.lab = 1.3)
-  lines(cste_mult_vect,vect_empirical_FDR,col = 2,type="l",lty = 1, lwd=2, cex.lab = 1.3, pch = 2)
-  lines(cste_mult_vect,list_lower_bounds$lower_bound_list[[k]], col = 4, type="p",lty = 1, lwd=2, cex.lab = 1.3, pch = 2)
-  lines(cste_mult_vect,list_lower_bounds$lower_bound_list[[k]], col = 4, type="l",lty = 1, lwd=2, cex.lab = 1.3, pch = 2)
-  lines(cste_mult_vect,as.numeric(list_lower_bounds$lower_bound_list_hat_one_dataset_K4_list_slope[[k]][[1]][sequence_temp]), col = "#993300", type = "p",lty = 1, lwd=2, cex.lab = 1.3, pch = 2)
-  lines(cste_mult_vect,as.numeric(list_lower_bounds$lower_bound_list_hat_one_dataset_K4_list_slope[[k]][[1]][sequence_temp]), col = "#993300", type = "l",lty = 1, lwd=2, cex.lab = 1.3, pch = 2)
+  legend("topright", legend = c("empirical FDR","b","estimated b with K=1", "estimated b with K in [1.5,5]"),
+         col = c(colors[1],colors[100],colors[200],colors[211]), cex=1.8, lwd = c(4,4,4,4,4),
+         pch = c(1,3,4,4),lty = c(1,1,1,1,1))
+  
+  ###### Only for $\Tilde{K} = 4$
+  plot(cste_mult_vect,vect_empirical_FDR,col = 2,type="p",xlim = c(0.1,10),ylim=c(0,1),xlab = "K",ylab = NA,lty = 5, lwd=4, cex.lab = 1.3, pch = 1,cex.lab = 1.8)
+  lines(cste_mult_vect,vect_empirical_FDR,col = 2,type="l",lty = 1, lwd=4, cex.lab = 1.8, pch = 1)
+  lines(cste_mult_vect,list_lower_bounds$lower_bound_list[[k]],pch=3,lwd=4, col = colors[100], type="p")
+  lines(cste_mult_vect,list_lower_bounds$lower_bound_list[[k]],pch=3,lwd=4, col = colors[100], type="l")
+  lines(cste_mult_vect,as.numeric(list_lower_bounds$lower_bound_list_hat_one_dataset_K4_list_slope[[k]][[1]][sequence_temp]), col = "#993300", type = "p",lty = 1, lwd=4, cex.lab = 1.3, pch = 4)
+  lines(cste_mult_vect,as.numeric(list_lower_bounds$lower_bound_list_hat_one_dataset_K4_list_slope[[k]][[1]][sequence_temp]), col = "#993300", type = "l",lty = 1, lwd=4, cex.lab = 1.3, pch = 4)
   abline(h=0,col="black",lty=2)
-  legend("topright", legend = c("empirical FDR","b","estimated b","with 4"),
-                   col = c(2,4,"#993300"), lty = c(1,1,1,0), cex=1.2, lwd = c(4,4,4,0),pch = c(2,2,2,26))
+  legend("topright", legend = c("empirical FDR","b","estimated b with K=4"),
+         col = c(2,colors[100],"#993300"), lty = c(1,1,1), cex=1.8, lwd = c(4,4,4),pch = c(1,3,4))
 }
+
+
 
 ###### FDR, theoretical upper bound and estimated upper bounds functions with respect to K
 which_cste_sup2 <- which(cste_mult_vect>=2)
@@ -454,93 +425,52 @@ for (k in index_plot){
   colfunc<-colorRampPalette(c("red","yellow","springgreen","#196F3D"))
   colors <- c(heat.colors(300)[1:100],topo.colors(300)[1:100],terrain.colors(300)[1:100])
   par(mfrow=c(1,1))
-  plot(cste_mult_vect[which_cste_sup2],vect_empirical_FDR[which_cste_sup2],pch=1,col = colors[1],type="p",xlim = c(2,10),xlab = "K",ylab = NA, lty = 5,lwd=2,cex.lab = 1.3,ylim = c(0,0.25))
-  lines(cste_mult_vect[which_cste_sup2],vect_empirical_FDR[which_cste_sup2],pch=1,lwd=2,col = colors[1],type="l")
-  lines(cste_mult_vect[which_cste_sup2],list_upper_bounds$upper_bound_list[[k]][which_cste_sup2],pch=3,lwd=2, col = colors[101], type="p")
-  lines(cste_mult_vect[which_cste_sup2],list_upper_bounds$upper_bound_list[[k]][which_cste_sup2],pch=3,lwd=2, col = colors[101], type="l")
-  lines(cste_mult_vect[which_cste_sup2],as.numeric(list_upper_bounds$upper_bound_list_hat_one_dataset_K1_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2, col = colors[201], type = "p")
-  lines(cste_mult_vect[which_cste_sup2],as.numeric(list_upper_bounds$upper_bound_list_hat_one_dataset_K1_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2, col = colors[201], type = "l")
-
-  lines(cste_mult_vect[which_cste_sup2],vect_empirical_FDR[which_cste_sup2],pch=1,col = colors[11],type="p",lwd=2,xlim = c(2,10),xlab = "K",ylab = "empirical FDR and upper bounds", lty = 5)
-  lines(cste_mult_vect[which_cste_sup2],vect_empirical_FDR[which_cste_sup2],pch=1,col = colors[11],type="l",lwd=2)
-  lines(cste_mult_vect[which_cste_sup2],list_upper_bounds$upper_bound_list[[k]][which_cste_sup2],pch=3, col = colors[111], type="p",lwd=2)
-  lines(cste_mult_vect[which_cste_sup2],list_upper_bounds$upper_bound_list[[k]][which_cste_sup2],pch=3, col = colors[111], type="l",lwd=2)
-  lines(cste_mult_vect[which_cste_sup2],as.numeric(list_upper_bounds$upper_bound_list_hat_one_dataset_K1.5_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2, col = colors[211], type = "p")
-  lines(cste_mult_vect[which_cste_sup2],as.numeric(list_upper_bounds$upper_bound_list_hat_one_dataset_K1.5_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2, col = colors[211], type = "l")
-
-  lines(cste_mult_vect[which_cste_sup2],vect_empirical_FDR[which_cste_sup2],pch=1, cex = 1,col = colors[21],type="p",xlim = c(2,10),xlab = "K",lwd=2,ylab = "empirical FDR and upper bounds", lty = 5)
-  lines(cste_mult_vect[which_cste_sup2],vect_empirical_FDR[which_cste_sup2],pch=1, cex = 1,col = colors[21],type="l",lwd=2)
-  lines(cste_mult_vect[which_cste_sup2],list_upper_bounds$upper_bound_list[[k]][which_cste_sup2],pch=3, cex = 1, col = colors[121], type="p",lwd=2)
-  lines(cste_mult_vect[which_cste_sup2],list_upper_bounds$upper_bound_list[[k]][which_cste_sup2],pch=3, cex = 1, col = colors[121], type="l",lwd=2)
-  lines(cste_mult_vect[which_cste_sup2],as.numeric(list_upper_bounds$upper_bound_list_hat_one_dataset_K2_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2, cex = 1, col = colors[221], type = "p")
-  lines(cste_mult_vect[which_cste_sup2],as.numeric(list_upper_bounds$upper_bound_list_hat_one_dataset_K2_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2, cex = 1, col = colors[221], type = "l")
-
-  lines(cste_mult_vect[which_cste_sup2],vect_empirical_FDR[which_cste_sup2],pch=1, cex = 1,col = colors[31],type="p",xlim = c(2,10),lwd=2,xlab = "K",ylab = "empirical FDR and upper bounds", lty = 5)
-  lines(cste_mult_vect[which_cste_sup2],vect_empirical_FDR[which_cste_sup2],pch=1, cex = 1,col = colors[31],type="l",lwd=2)
-  lines(cste_mult_vect[which_cste_sup2],list_upper_bounds$upper_bound_list[[k]][which_cste_sup2],pch=3, cex = 1, col = colors[131], type="p",lwd=2)
-  lines(cste_mult_vect[which_cste_sup2],list_upper_bounds$upper_bound_list[[k]][which_cste_sup2],pch=3, cex = 1, col = colors[131], type="l",lwd=2)
-  lines(cste_mult_vect[which_cste_sup2],as.numeric(list_upper_bounds$upper_bound_list_hat_one_dataset_K2.5_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2, cex = 1, col = colors[231], type = "p")
-  lines(cste_mult_vect[which_cste_sup2],as.numeric(list_upper_bounds$upper_bound_list_hat_one_dataset_K2.5_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2, cex = 1, col = colors[231], type = "l")
-
-  lines(cste_mult_vect[which_cste_sup2],vect_empirical_FDR[which_cste_sup2],pch=1, cex = 1,col = colors[41],type="p",lwd=2,xlim = c(2,10),xlab = "K",ylab = "empirical FDR and upper bounds", lty = 5)
-  lines(cste_mult_vect[which_cste_sup2],vect_empirical_FDR[which_cste_sup2],pch=1, cex = 1,col = colors[41],type="l",lwd=2)
-  lines(cste_mult_vect[which_cste_sup2],list_upper_bounds$upper_bound_list[[k]][which_cste_sup2],pch=3, cex = 1, col = colors[141], type="p",lwd=2)
-  lines(cste_mult_vect[which_cste_sup2],list_upper_bounds$upper_bound_list[[k]][which_cste_sup2],pch=3, cex = 1, col = colors[141], type="l",lwd=2)
-  lines(cste_mult_vect[which_cste_sup2],as.numeric(list_upper_bounds$upper_bound_list_hat_one_dataset_K3_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2, cex = 1, col = colors[241], type = "p")
-  lines(cste_mult_vect[which_cste_sup2],as.numeric(list_upper_bounds$upper_bound_list_hat_one_dataset_K3_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2, cex = 1, col = colors[241], type = "l")
-
-  lines(cste_mult_vect[which_cste_sup2],vect_empirical_FDR[which_cste_sup2],pch=1,cex = 1,col = colors[51],type="p",xlim = c(2,10),lwd=2,xlab = "K",ylab = "empirical FDR and upper bounds", lty = 5)
-  lines(cste_mult_vect[which_cste_sup2],vect_empirical_FDR[which_cste_sup2],pch=1,cex = 1,col = colors[51],type="l",lwd=2)
-  lines(cste_mult_vect[which_cste_sup2],list_upper_bounds$upper_bound_list[[k]][which_cste_sup2],pch=3,cex = 1, col = colors[151], type="p",lwd=2)
-  lines(cste_mult_vect[which_cste_sup2],list_upper_bounds$upper_bound_list[[k]][which_cste_sup2],pch=3,cex = 1, col = colors[151], type="l",lwd=2)
-  lines(cste_mult_vect[which_cste_sup2],as.numeric(list_upper_bounds$upper_bound_list_hat_one_dataset_K3.5_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2,cex = 1, col = colors[251], type = "p")
-  lines(cste_mult_vect[which_cste_sup2],as.numeric(list_upper_bounds$upper_bound_list_hat_one_dataset_K3.5_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2,cex = 1, col = colors[251], type = "l")
-
-  lines(cste_mult_vect[which_cste_sup2],vect_empirical_FDR[which_cste_sup2],pch=1,cex = 1,col = colors[61],type="p",xlim = c(2,10),lwd=2,xlab = "K",ylab = "empirical FDR and upper bounds", lty = 5)
-  lines(cste_mult_vect[which_cste_sup2],vect_empirical_FDR[which_cste_sup2],pch=1,cex = 1,col = colors[61],type="l",lwd=2)
-  lines(cste_mult_vect[which_cste_sup2],list_upper_bounds$upper_bound_list[[k]][which_cste_sup2],pch=3,cex = 1, col = colors[161], type="p",lwd=2)
-  lines(cste_mult_vect[which_cste_sup2],list_upper_bounds$upper_bound_list[[k]][which_cste_sup2],pch=3,cex = 1, col = colors[161], type="l",lwd=2)
-  lines(cste_mult_vect[which_cste_sup2],as.numeric(list_upper_bounds$upper_bound_list_hat_one_dataset_Klog_n_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2,cex = 1, col = colors[261], type = "p")
-  lines(cste_mult_vect[which_cste_sup2],as.numeric(list_upper_bounds$upper_bound_list_hat_one_dataset_Klog_n_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2,cex = 1, col = colors[261], type = "l")
-
-  lines(cste_mult_vect[which_cste_sup2],vect_empirical_FDR[which_cste_sup2],pch=1,cex = 1,col = colors[71],type="p",xlim = c(2,10),lwd=2,xlab = "K",ylab = "empirical FDR and upper bounds", lty = 5)
-  lines(cste_mult_vect[which_cste_sup2],vect_empirical_FDR[which_cste_sup2],pch=1,cex = 1,col = colors[71],type="l",lwd=2)
-  lines(cste_mult_vect[which_cste_sup2],list_upper_bounds$upper_bound_list[[k]][which_cste_sup2],pch=3,cex = 1, col = colors[171], type="p",lwd=2)
-  lines(cste_mult_vect[which_cste_sup2],list_upper_bounds$upper_bound_list[[k]][which_cste_sup2],pch=3,cex = 1, col = colors[171], type="l",lwd=2)
-  lines(cste_mult_vect[which_cste_sup2],as.numeric(list_upper_bounds$upper_bound_list_hat_one_dataset_K4_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2,cex = 1, col = colors[271], type = "p")
-  lines(cste_mult_vect[which_cste_sup2],as.numeric(list_upper_bounds$upper_bound_list_hat_one_dataset_K4_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2,cex = 1, col = colors[271], type = "l")
-
-  lines(cste_mult_vect[which_cste_sup2],vect_empirical_FDR[which_cste_sup2],pch=1,cex = 1,col = colors[81],type="p",xlim = c(2,10),lwd=2,xlab = "K",ylab = "empirical FDR and upper bounds", lty = 5)
-  lines(cste_mult_vect[which_cste_sup2],vect_empirical_FDR[which_cste_sup2],pch=1,cex = 1,col = colors[81],type="l",lwd=2)
-  lines(cste_mult_vect[which_cste_sup2],list_upper_bounds$upper_bound_list[[k]][which_cste_sup2],pch=3,cex = 1, col = colors[181], type="p",lwd=2)
-  lines(cste_mult_vect[which_cste_sup2],list_upper_bounds$upper_bound_list[[k]][which_cste_sup2],pch=3,cex = 1, col = colors[181], type="l",lwd=2)
-  lines(cste_mult_vect[which_cste_sup2],as.numeric(list_upper_bounds$upper_bound_list_hat_one_dataset_K4.5_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2,cex = 1, col = colors[281], type = "p")
-  lines(cste_mult_vect[which_cste_sup2],as.numeric(list_upper_bounds$upper_bound_list_hat_one_dataset_K4.5_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2,cex = 1, col = colors[281], type = "l")
-
-  lines(cste_mult_vect[which_cste_sup2],vect_empirical_FDR[which_cste_sup2],pch=1,cex = 1,col = colors[91],type="p",xlim = c(2,10),lwd=2,xlab = "K",ylab = "empirical FDR and upper bounds", lty = 5)
-  lines(cste_mult_vect[which_cste_sup2],vect_empirical_FDR[which_cste_sup2],pch=1,cex = 1,col = colors[91],type="l",lwd=2)
-  lines(cste_mult_vect[which_cste_sup2],list_upper_bounds$upper_bound_list[[k]][which_cste_sup2],pch=3,cex = 1, col = colors[191], type="p",lwd=2)
-  lines(cste_mult_vect[which_cste_sup2],list_upper_bounds$upper_bound_list[[k]][which_cste_sup2],pch=3,cex = 1, col = colors[191], type="l",lwd=2)
-  lines(cste_mult_vect[which_cste_sup2],as.numeric(list_upper_bounds$upper_bound_list_hat_one_dataset_K5_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2,cex = 1, col = colors[291], type = "p")
-  lines(cste_mult_vect[which_cste_sup2],as.numeric(list_upper_bounds$upper_bound_list_hat_one_dataset_K5_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2,cex = 1, col = colors[291], type = "l")
+  plot(cste_mult_vect[which_cste_sup2],vect_empirical_FDR[which_cste_sup2],pch=1,col = colors[1],type="p",xlim = c(2,10),xlab = "K",ylab = NA, lty = 5,lwd=4,cex.lab = 1.8,ylim = c(0,0.25))
+  lines(cste_mult_vect[which_cste_sup2],vect_empirical_FDR[which_cste_sup2],pch=1,lwd=4,col = colors[1],type="l")
+  lines(cste_mult_vect[which_cste_sup2],list_upper_bounds$upper_bound_list[[k]][which_cste_sup2],pch=3,lwd=4, col = colors[100], type="p")
+  lines(cste_mult_vect[which_cste_sup2],list_upper_bounds$upper_bound_list[[k]][which_cste_sup2],pch=3,lwd=4, col = colors[100], type="l")
+  lines(cste_mult_vect[which_cste_sup2],as.numeric(list_upper_bounds$upper_bound_list_hat_one_dataset_K1_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=4, col = colors[200], type = "p")
+  lines(cste_mult_vect[which_cste_sup2],as.numeric(list_upper_bounds$upper_bound_list_hat_one_dataset_K1_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=4, col = colors[200], type = "l")
+  #lines(cste_mult_vect[which_cste_sup2],as.numeric(list_upper_bounds$upper_bound_list_hat_one_dataset_K5_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=4,cex = 1, col = colors[141], type = "p")
+  lines(cste_mult_vect[which_cste_sup2],as.numeric(list_upper_bounds$upper_bound_list_hat_one_dataset_K2_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=4, cex = 1, col = colors[211], type = "p")
+  lines(cste_mult_vect[which_cste_sup2],as.numeric(list_upper_bounds$upper_bound_list_hat_one_dataset_K2_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=4, cex = 1, col = colors[211], type = "l")
+  #lines(cste_mult_vect[which_cste_sup2],as.numeric(list_upper_bounds$upper_bound_list_hat_one_dataset_K5_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=4,cex = 1, col = colors[141], type = "l")
+  # lines(cste_mult_vect[which_cste_sup2],as.numeric(list_upper_bounds$upper_bound_list_hat_one_dataset_K1.5_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2, col = colors[211], type = "p")
+  # lines(cste_mult_vect[which_cste_sup2],as.numeric(list_upper_bounds$upper_bound_list_hat_one_dataset_K1.5_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2, col = colors[211], type = "l")
+  # lines(cste_mult_vect[which_cste_sup2],as.numeric(list_upper_bounds$upper_bound_list_hat_one_dataset_K2.5_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2, cex = 1, col = colors[231], type = "p")
+  # lines(cste_mult_vect[which_cste_sup2],as.numeric(list_upper_bounds$upper_bound_list_hat_one_dataset_K2.5_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2, cex = 1, col = colors[231], type = "l")
+  # lines(cste_mult_vect[which_cste_sup2],as.numeric(list_upper_bounds$upper_bound_list_hat_one_dataset_K3_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2, cex = 1, col = colors[241], type = "p")
+  # lines(cste_mult_vect[which_cste_sup2],as.numeric(list_upper_bounds$upper_bound_list_hat_one_dataset_K3_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2, cex = 1, col = colors[241], type = "l")
+  # lines(cste_mult_vect[which_cste_sup2],as.numeric(list_upper_bounds$upper_bound_list_hat_one_dataset_K3.5_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2,cex = 1, col = colors[251], type = "p")
+  # lines(cste_mult_vect[which_cste_sup2],as.numeric(list_upper_bounds$upper_bound_list_hat_one_dataset_K3.5_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2,cex = 1, col = colors[251], type = "l")
+  # lines(cste_mult_vect[which_cste_sup2],as.numeric(list_upper_bounds$upper_bound_list_hat_one_dataset_Klog_n_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2,cex = 1, col = colors[261], type = "p")
+  # lines(cste_mult_vect[which_cste_sup2],as.numeric(list_upper_bounds$upper_bound_list_hat_one_dataset_Klog_n_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2,cex = 1, col = colors[261], type = "l")
+  # lines(cste_mult_vect[which_cste_sup2],as.numeric(list_upper_bounds$upper_bound_list_hat_one_dataset_K4_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2,cex = 1, col = colors[271], type = "p")
+  # lines(cste_mult_vect[which_cste_sup2],as.numeric(list_upper_bounds$upper_bound_list_hat_one_dataset_K4_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2,cex = 1, col = colors[271], type = "l")
+  # lines(cste_mult_vect[which_cste_sup2],as.numeric(list_upper_bounds$upper_bound_list_hat_one_dataset_K4.5_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2,cex = 1, col = colors[281], type = "p")
+  # lines(cste_mult_vect[which_cste_sup2],as.numeric(list_upper_bounds$upper_bound_list_hat_one_dataset_K4.5_list_slope[[k]][[1]][sequence_temp])[which_cste_sup2],pch=4,lwd=2,cex = 1, col = colors[281], type = "l")
   abline(h=0,col="black",lty=2)
-  legend("topright", legend = c("empirical FDR","B","estimated B"),
-         col = c(rep(1,3)), cex=1, lwd = c(4,4,4),
-         pch = c(1,3,4),lty = c(1,1,1))
-
-  plot(cste_mult_vect,vect_empirical_FDR,col = 2,type="p",xlim = c(0.1,10),xlab = "K", ylab = NA,lty = 5, lwd=2, cex.lab = 1.3, pch = 2,cex.lab = 1.3, ylim = c(0,max(as.numeric(list_upper_bounds$upper_bound_list_hat_one_dataset_K4_list_slope[[k]][[1]][sequence_temp]))))
-  lines(cste_mult_vect,vect_empirical_FDR,col = 2,type="l",lty = 1, lwd=2, cex.lab = 1.3, pch = 2)
-  lines(cste_mult_vect,list_upper_bounds$upper_bound_list[[k]], col = 4, type="p",lty = 1, lwd=2, cex.lab = 1.3, pch = 2)
-  lines(cste_mult_vect,list_upper_bounds$upper_bound_list[[k]], col = 4, type="l",lty = 1, lwd=2, cex.lab = 1.3, pch = 2)
-  lines(cste_mult_vect,as.numeric(list_upper_bounds$upper_bound_list_hat_one_dataset_K4_list_slope[[k]][[1]][sequence_temp]), col = "#993300", type = "p",lty = 1, lwd=2, cex.lab = 1.3, pch = 2)
-  lines(cste_mult_vect,as.numeric(list_upper_bounds$upper_bound_list_hat_one_dataset_K4_list_slope[[k]][[1]][sequence_temp]), col = "#993300", type = "l",lty = 1, lwd=2, cex.lab = 1.3, pch = 2)
+  legend("topright", legend = c("empirical FDR","B","estimated B with K=1", "estimated b with K in [1.5,5]"),
+         col = c(colors[1],colors[100],colors[200],colors[211]), cex=1.8, lwd = c(4,4,4,4,4),
+         pch = c(1,3,4,4),lty = c(1,1,1,1,1))
+  
+  ###### Only for $\Tilde{K} = 4$
+  plot(cste_mult_vect,vect_empirical_FDR,col = 2,type="p",xlim = c(0.1,10),xlab = "K", ylab = NA,lty = 5, lwd=4, cex.lab = 1.8, pch =1, ylim = c(0,max(as.numeric(list_upper_bounds$upper_bound_list_hat_one_dataset_K4_list_slope[[k]][[1]][sequence_temp]))))
+  lines(cste_mult_vect,vect_empirical_FDR,col = 2,type="l",lty = 1, lwd=4, cex.lab = 1.3, pch = 1)
+  lines(cste_mult_vect,list_upper_bounds$upper_bound_list[[k]], col = colors[101], type="p",lty = 1, lwd=4, cex.lab = 1.3, pch = 3)
+  lines(cste_mult_vect,list_upper_bounds$upper_bound_list[[k]], col = colors[101], type="l",lty = 1, lwd=4, cex.lab = 1.3, pch = 3)
+  lines(cste_mult_vect,as.numeric(list_upper_bounds$upper_bound_list_hat_one_dataset_K4_list_slope[[k]][[1]][sequence_temp]), col = "#993300", type = "p",lty = 1, lwd=4, cex.lab = 1.3, pch = 4)
+  lines(cste_mult_vect,as.numeric(list_upper_bounds$upper_bound_list_hat_one_dataset_K4_list_slope[[k]][[1]][sequence_temp]), col = "#993300", type = "l",lty = 1, lwd=4, cex.lab = 1.3, pch = 4)
   abline(h=0,col="black",lty=2)
-  legend("topright", legend = c("empirical FDR","B","estimated B","with 4"),
-         col = c(2,4,"#993300"), lty = c(1,1,1,0), cex=1.3, lwd = c(4,4,4,0),pch = c(2,2,2,26))
+  legend("topright", legend = c("empirical FDR","B","estimated B with K=4"),
+         col = c(2,colors[101],"#993300"), lty = c(1,1,1), cex=1.8, lwd = c(4,4,4),pch = c(1,3,4))
 }
 
-
 ###### Relative change of the estimated lower bounds functions with respect to K
+which_cste_sup2 <- which(cste_mult_vect>=2)
+sequence_temp <- seq(1,length(list_lower_bounds$lower_bound_list_hat_one_dataset_K2_list_slope[[1]][[1]]), by=2)
+colfunc<-colorRampPalette(c("red","yellow","springgreen","#196F3D"))
+colors <- c(heat.colors(300)[1:100],topo.colors(300)[1:100],terrain.colors(300)[1:100])
 for (k in index_plot){
   par(mfrow=c(1,1))
   relative_change_K1 <- (as.numeric(list_lower_bounds$lower_bound_list_hat_one_dataset_K1_list_slope[[k]][[1]][sequence_temp])-list_lower_bounds$lower_bound_list[[k]])/list_lower_bounds$lower_bound_list[[k]]
@@ -567,47 +497,34 @@ for (k in index_plot){
              relative_change_K1,relative_change_Klog_n,relative_change_K4,relative_change_K4.5,relative_change_K5)
   ymin = min(relative_change_K2,relative_change_K3,relative_change_K2.5,relative_change_K3.5,relative_change_K1.5,
              relative_change_K1,relative_change_Klog_n,relative_change_K4,relative_change_K4.5,relative_change_K5)
-
-  plot(cste_mult_vect,relative_change_K1,col = 1, xlim = c(0,10),ylim = c(ymin,ymax),
-       xlab = "K", ylab = NA, lty = 5,lwd=2,cex.lab = 1.3,type="p",cex=1,pch=1)
-  lines(cste_mult_vect,relative_change_K1,col = 1, type="l",cex=1,pch=1)
-
-  lines(cste_mult_vect,relative_change_K1.5,col = 2,cex=1,pch=19, xlim = c(0,10),xlab = "K",ylab = "relative difference for lower bounds",type="p")
-  lines(cste_mult_vect,relative_change_K1.5,col = 2, type="l",cex=1,pch=19)
-
-  lines(cste_mult_vect,relative_change_K2,col = 3,cex=2,pch =3, xlim = c(0,10),xlab = "K",ylab = "relative difference for lower bounds",type="p")
-  lines(cste_mult_vect,relative_change_K2,col = 3,cex=2,pch=3, type="l")
-
-  lines(cste_mult_vect,relative_change_K2.5,col = 4,cex=2,pch=4, xlim = c(0,10),xlab = "K",ylab = "relative difference for lower bounds",type="p")
-  lines(cste_mult_vect,relative_change_K2.5,col = 4,cex=2,pch=4, type="l")
-
-  lines(cste_mult_vect,relative_change_K3,col = 5,cex=2,pch=0, xlim = c(0,10),xlab = "K",ylab = "relative difference for lower bounds",type="p")
-  lines(cste_mult_vect,relative_change_K3,col = 5,cex=2,pch=0, type="l")
-
-  lines(cste_mult_vect,relative_change_K3.5,col = 6,cex=3,pch=0, xlim = c(0,10),xlab = "K",ylab = "relative difference for lower bounds",type="p")
-  lines(cste_mult_vect,relative_change_K3.5,col = 6,cex=3,pch=0, type="l")
-
-  lines(cste_mult_vect,relative_change_Klog_n,col = 7,cex=3,pch=1, xlim = c(0,10),xlab = "K",ylab = "relative difference for lower bounds",type="p")
-  lines(cste_mult_vect,relative_change_Klog_n,col = 7,cex=3,pch=1, type="l")
-
-  lines(cste_mult_vect,relative_change_K4,col = 8,cex=3,pch=2, xlim = c(0,10),xlab = "K",ylab = "relative difference for lower bounds",type="p")
-  lines(cste_mult_vect,relative_change_K4,col = 8,cex=3,pch=2, type="l")
-
-  lines(cste_mult_vect,relative_change_K4.5,cex=3,pch=6,col = "#993300", xlim = c(0,10),xlab = "K",ylab = "relative difference for lower bounds",type="p")
-  lines(cste_mult_vect,relative_change_K4.5,cex=3,pch=6,col = "#993300", type="l")
-
-  lines(cste_mult_vect,relative_change_K5,cex=4,pch=1,col =  "#660099", xlim = c(0,10),xlab = "K",ylab = "relative difference for lower bounds",type="p")
-  lines(cste_mult_vect,relative_change_K5,cex=4,pch=1,col =  "#660099", type="l")
-
-  legend("right", legend = c("1","1.5","2","2.5","3","3.5","log(n)","4","4.5","5"),
-         col = c(1:8,"#993300","#660099"), cex=1.1, lwd = c(1,1,2,2,2,3,3,3,3,4),
-         pch = c(1,19,3,4,0,0,1,2,6,1),lty = rep(0,10))
+  par(mfrow=c(1,1))
+  plot(cste_mult_vect,relative_change_K1,col = colors[200], xlim = c(0,10),ylim = c(ymin,ymax),xlab = "K", ylab = NA, lty = 5,lwd=4,type="p",cex=1,pch=1,cex.lab = 1.8)
+  lines(cste_mult_vect,relative_change_K1,col = colors[200], type="l",cex=1,pch=1,cex.lab = 1.3,lty = 1,lwd=4)
+  lines(cste_mult_vect,relative_change_K1.5,col = colors[123],cex=1,pch=2, xlim = c(0,10),ylim = c(0,ymax),xlab = "K",ylab = "Relative standard deviation of the estimated lower bounds",type="p",cex.lab = 1.3)
+  lines(cste_mult_vect,relative_change_K1.5,col = colors[123],cex=1,pch=1, type="l",cex.lab = 1.3,lty = 1,lwd=4)
+  lines(cste_mult_vect,relative_change_K2,col = 3,cex=1,pch=3, xlim = c(0,10),ylim = c(0,ymax),xlab = "K",ylab = "Relative standard deviation of the estimated lower bounds",type="p",cex.lab = 1.3)
+  lines(cste_mult_vect,relative_change_K2,col = 3,cex=1,pch=1, type="l",cex.lab = 1.3,lty = 1,lwd=4)
+  lines(cste_mult_vect,relative_change_K2.5,col = colors[10],cex=1,pch=4, xlim = c(0,10),ylim = c(0,ymax),xlab = "K",ylab = "Relative standard deviation of the estimated lower bounds",type="p",cex.lab = 1.3)
+  lines(cste_mult_vect,relative_change_K2.5,col = colors[10],cex=1,pch=1, type="l",cex.lab = 1.3,lty = 1,lwd=4)
+  lines(cste_mult_vect,relative_change_K3,col = colors[160],cex=1,pch=5, xlim = c(0,10),ylim = c(0,ymax),xlab = "K",ylab = "Relative standard deviation of the estimated lower bounds",type="p",cex.lab = 1.3)
+  lines(cste_mult_vect,relative_change_K3,col = colors[160],cex=1,pch=1, type="l",cex.lab = 1.3,lty = 1,lwd=4)
+  lines(cste_mult_vect,relative_change_K3.5,col = colors[360],cex=1,pch=6, xlim = c(0,10),ylim = c(0,ymax),xlab = "K",ylab = "Relative standard deviation of the estimated lower bounds",type="p",cex.lab = 1.3)
+  lines(cste_mult_vect,relative_change_K3.5,col = colors[360],cex=1,pch=1, type="l",cex.lab = 1.3,lty = 1,lwd=4)
+  lines(cste_mult_vect,relative_change_K4,col = 6,cex=1,pch=7, xlim = c(0,10),ylim = c(0,ymax),xlab = "K",ylab = "Relative standard deviation of the estimated lower bounds",type="p",cex.lab = 1.3)
+  lines(cste_mult_vect,relative_change_K4,col = 6,cex=1,pch=1, type="l",cex.lab = 1.3,lty = 1,lwd=4)
+  lines(cste_mult_vect,relative_change_K4.5,col = 7,cex=1,pch=8, xlim = c(0,10),ylim = c(0,ymax),xlab = "K",ylab = "Relative standard deviation of the estimated lower bounds",type="p",cex.lab = 1.3)
+  lines(cste_mult_vect,relative_change_K4.5,col = 7,cex=1,pch=1, type="l",cex.lab = 1.3,lty = 1,lwd=4)
+  lines(cste_mult_vect,relative_change_Klog_n,col = 8,cex=1,pch=9, xlim = c(0,10),ylim = c(0,ymax),xlab = "K",ylab = "Relative standard deviation of the estimated lower bounds",type="p",cex.lab = 1.3)
+  lines(cste_mult_vect,relative_change_Klog_n,col = 8,cex=1,pch=1, type="l",cex.lab = 1.3,lty = 1,lwd=4)
+  lines(cste_mult_vect,relative_change_K5,cex=1,pch=10,col = "#660099",xlim = c(0,10),ylim = c(0,ymax),xlab = "K",ylab = "Relative standard deviation of the estimated lower bounds",type="p",cex.lab = 1.3)
+  lines(cste_mult_vect,relative_change_K5,cex=1,pch=10,col = "#660099",type="l",cex.lab = 1.3,lty = 1,lwd=4)
+  legend("topleft", legend = c(c("K=1","K=1.5","K=2","K=2.5","K=3","K=3.5","K=log(n)","K=4","K=4.5","K=5")),
+         col = c(colors[200],colors[123],3,colors[10],colors[160],colors[360],6,7,8,"#660099"), cex=1.8, lwd = rep(4,10), pch = c(1,2,3,4,5,6,7,8,9,10), lty = rep(1,10))
 }
 
 
 ###### Relative standard error of the estimated lower bounds functions with respect to K
 for (k in index_plot){
-  ###### Variance of estimators
   mean_lower_K1 <- c()
   mean_lower_K1.5 <- c()
   mean_lower_K2 <- c()
@@ -685,46 +602,36 @@ for (k in index_plot){
              relative_standard_error_K2.5,relative_standard_error_K3,relative_standard_error_K3.5,relative_standard_error_Klog_n,
              relative_standard_error_K4,relative_standard_error_K4.5,relative_standard_error_K5)
   par(mfrow=c(1,1))
-  plot(cste_mult_vect,relative_standard_error_K1,col = 1, xlim = c(0,10),ylim = c(0,ymax),
-       xlab = "K", ylab = NA, lty = 5,lwd=2,cex.lab = 1.3,type="p",cex=1,pch=1)
-  lines(cste_mult_vect,relative_standard_error_K1,col = 1, type="l",cex=1,pch=1)
-
-  lines(cste_mult_vect,relative_standard_error_K1.5,col = 2,cex=1,pch=19, xlim = c(0,10),ylim = c(0,ymax),xlab = "K",ylab = "Relative standard deviation of the estimated lower bounds",type="p")
-  lines(cste_mult_vect,relative_standard_error_K1.5,col = 2,cex=1,pch=19, type="l")
-
-  lines(cste_mult_vect,relative_standard_error_K2,col = 3,cex=2,pch=3, xlim = c(0,10),ylim = c(0,ymax),xlab = "K",ylab = "Relative standard deviation of the estimated lower bounds",type="p")
-  lines(cste_mult_vect,relative_standard_error_K2,col = 3,cex=2,pch=3, type="l")
-
-  lines(cste_mult_vect,relative_standard_error_K2.5,col = 4,cex=2,pch=4, xlim = c(0,10),ylim = c(0,ymax),xlab = "K",ylab = "Relative standard deviation of the estimated lower bounds",type="p")
-  lines(cste_mult_vect,relative_standard_error_K2.5,col = 4,cex=2,pch=4, type="l")
-
-  lines(cste_mult_vect,relative_standard_error_K3,col = 5,cex=2,pch=0, xlim = c(0,10),ylim = c(0,ymax),xlab = "K",ylab = "Relative standard deviation of the estimated lower bounds",type="p")
-  lines(cste_mult_vect,relative_standard_error_K3,col = 5,cex=2,pch=0, type="l")
-
-  lines(cste_mult_vect,relative_standard_error_K3.5,col = 6,cex=3,pch=0, xlim = c(0,10),ylim = c(0,ymax),xlab = "K",ylab = "Relative standard deviation of the estimated lower bounds",type="p")
-  lines(cste_mult_vect,relative_standard_error_K3.5,col = 6,cex=3,pch=0, type="l")
-
-  lines(cste_mult_vect,relative_standard_error_Klog_n,col = 7,cex=3,pch=1, xlim = c(0,10),ylim = c(0,ymax),xlab = "K",ylab = "Relative standard deviation of the estimated lower bounds",type="p")
-  lines(cste_mult_vect,relative_standard_error_Klog_n,col = 7,cex=3,pch=1, type="l")
-
-  lines(cste_mult_vect,relative_standard_error_K4,col = 8,cex=3,pch=2, xlim = c(0,10),ylim = c(0,ymax),xlab = "K",ylab = "Relative standard deviation of the estimated lower bounds",type="p")
-  lines(cste_mult_vect,relative_standard_error_K4,col = 8,cex=3,pch=2, type="l")
-
-  lines(cste_mult_vect,relative_standard_error_K4.5,col = "#993300",cex=3,pch=6, xlim = c(0,10),ylim = c(0,ymax),xlab = "K",ylab = "Relative standard deviation of the estimated lower bounds",type="p")
-  lines(cste_mult_vect,relative_standard_error_K4.5,col = "#993300",cex=3,pch=6, type="l")
-
-  lines(cste_mult_vect,relative_standard_error_K5,col = "#660099",cex=4,pch=1, xlim = c(0,10),ylim = c(0,ymax),xlab = "K",ylab = "Relative standard deviation of the estimated lower bounds",type="p")
-  lines(cste_mult_vect,relative_standard_error_K5,col = "#660099",cex=4,pch=1, type="l")
-
-  legend("topleft", legend = c("1","1.5","2","2.5","3","3.5","log(n)","4","4.5","5"),
-         col = c(1:8,"#993300","#660099"), cex=1.1, lwd = c(1,1,2,2,2,3,3,3,3,4),
-         pch = c(1,19,3,4,0,0,1,2,6,1),lty = rep(0,10))
+  plot(cste_mult_vect,relative_standard_error_K1,col = colors[200], xlim = c(0,10),ylim = c(0,ymax),xlab = "K", ylab = NA, lty = 5,lwd=4,type="p",cex=1,pch=1,cex.lab = 1.8)
+  lines(cste_mult_vect,relative_standard_error_K1,col = colors[200], type="l",cex=1,pch=1,cex.lab = 1.3,lty = 1,lwd=4)
+  lines(cste_mult_vect,relative_standard_error_K1.5,col = colors[123],cex=1,pch=2, xlim = c(0,10),ylim = c(0,ymax),xlab = "K",ylab = "Relative standard deviation of the estimated lower bounds",type="p",cex.lab = 1.3)
+  lines(cste_mult_vect,relative_standard_error_K1.5,col = colors[123],cex=1,pch=1, type="l",cex.lab = 1.3,lty = 1,lwd=4)
+  lines(cste_mult_vect,relative_standard_error_K2,col = 3,cex=1,pch=3, xlim = c(0,10),ylim = c(0,ymax),xlab = "K",ylab = "Relative standard deviation of the estimated lower bounds",type="p",cex.lab = 1.3)
+  lines(cste_mult_vect,relative_standard_error_K2,col = 3,cex=1,pch=1, type="l",cex.lab = 1.3,lty = 1,lwd=4)
+  lines(cste_mult_vect,relative_standard_error_K2.5,col = colors[10],cex=1,pch=4, xlim = c(0,10),ylim = c(0,ymax),xlab = "K",ylab = "Relative standard deviation of the estimated lower bounds",type="p",cex.lab = 1.3)
+  lines(cste_mult_vect,relative_standard_error_K2.5,col = colors[10],cex=1,pch=1, type="l",cex.lab = 1.3,lty = 1,lwd=4)
+  lines(cste_mult_vect,relative_standard_error_K3,col = colors[160],cex=1,pch=5, xlim = c(0,10),ylim = c(0,ymax),xlab = "K",ylab = "Relative standard deviation of the estimated lower bounds",type="p",cex.lab = 1.3)
+  lines(cste_mult_vect,relative_standard_error_K3,col = colors[160],cex=1,pch=1, type="l",cex.lab = 1.3,lty = 1,lwd=4)
+  lines(cste_mult_vect,relative_standard_error_K3.5,col = colors[360],cex=1,pch=6, xlim = c(0,10),ylim = c(0,ymax),xlab = "K",ylab = "Relative standard deviation of the estimated lower bounds",type="p",cex.lab = 1.3)
+  lines(cste_mult_vect,relative_standard_error_K3.5,col = colors[360],cex=1,pch=1, type="l",cex.lab = 1.3,lty = 1,lwd=4)
+  lines(cste_mult_vect,relative_standard_error_K4,col = 6,cex=1,pch=7, xlim = c(0,10),ylim = c(0,ymax),xlab = "K",ylab = "Relative standard deviation of the estimated lower bounds",type="p",cex.lab = 1.3)
+  lines(cste_mult_vect,relative_standard_error_K4,col = 6,cex=1,pch=1, type="l",cex.lab = 1.3,lty = 1,lwd=4)
+  lines(cste_mult_vect,relative_standard_error_K4.5,col = 7,cex=1,pch=8, xlim = c(0,10),ylim = c(0,ymax),xlab = "K",ylab = "Relative standard deviation of the estimated lower bounds",type="p",cex.lab = 1.3)
+  lines(cste_mult_vect,relative_standard_error_K4.5,col = 7,cex=1,pch=1, type="l",cex.lab = 1.3,lty = 1,lwd=4)
+  lines(cste_mult_vect,relative_standard_error_Klog_n,col = 8,cex=1,pch=9, xlim = c(0,10),ylim = c(0,ymax),xlab = "K",ylab = "Relative standard deviation of the estimated lower bounds",type="p",cex.lab = 1.3)
+  lines(cste_mult_vect,relative_standard_error_Klog_n,col = 8,cex=1,pch=1, type="l",cex.lab = 1.3,lty = 1,lwd=4)
+  lines(cste_mult_vect,relative_standard_error_K5,cex=1,pch=10,col = "#660099",xlim = c(0,10),ylim = c(0,ymax),xlab = "K",ylab = "Relative standard deviation of the estimated lower bounds",type="p",cex.lab = 1.3)
+  lines(cste_mult_vect,relative_standard_error_K5,cex=1,pch=10,col = "#660099",type="l",cex.lab = 1.3,lty = 1,lwd=4)
+  legend("topleft", legend = c(c("K=1","K=1.5","K=2","K=2.5","K=3","K=3.5","K=log(n)","K=4","K=4.5","K=5")),
+         col = c(colors[200],colors[123],3,colors[10],colors[160],colors[360],6,7,8,"#660099"), cex=1.8, lwd = rep(4,10), pch = c(1,2,3,4,5,6,7,8,9,10), lty = rep(1,10))
 }
 
 
 ###### Relative change of the estimated upper bounds functions with respect to K
 which_cste_sup2 <- which(cste_mult_vect>=2)
 sequence_temp <- seq(1,length(list_lower_bounds$lower_bound_list_hat_one_dataset_K2_list_slope[[1]][[1]]), by=2)
+colfunc<-colorRampPalette(c("red","yellow","springgreen","#196F3D"))
+colors <- c(heat.colors(300)[1:100],topo.colors(300)[1:100],terrain.colors(300)[1:100])
 for (k in index_plot){
   par(mfrow=c(1,1))
   relative_change_K1 <- (as.numeric(list_upper_bounds$upper_bound_list_hat_one_dataset_K1_list_slope[[k]][[1]][sequence_temp])-list_upper_bounds$upper_bound_list[[k]])/list_upper_bounds$upper_bound_list[[k]]
@@ -751,47 +658,35 @@ for (k in index_plot){
              relative_change_K1,relative_change_Klog_n,relative_change_K4,relative_change_K4.5,relative_change_K5)
   ymin = min(relative_change_K2,relative_change_K3,relative_change_K2.5,relative_change_K3.5,relative_change_K1.5,
              relative_change_K1,relative_change_Klog_n,relative_change_K4,relative_change_K4.5,relative_change_K5)
-
-  plot(cste_mult_vect,relative_change_K1,col = 1, xlim = c(0,10),ylim = c(ymin,ymax),
-       xlab = "K",ylab = NA, lty = 5,lwd=2,cex.lab = 1.3,type="p",cex=1,pch=1)
-  lines(cste_mult_vect,relative_change_K1,col = 1, type="l",cex=1,pch=1)
-
-  lines(cste_mult_vect,relative_change_K1.5,col = 2,cex=1,pch=19, xlim = c(0,10),xlab = "K",ylab = "relative difference for upper bounds",type="p")
-  lines(cste_mult_vect,relative_change_K1.5,col = 2, type="l",cex=1,pch=19)
-
-  lines(cste_mult_vect,relative_change_K2,col = 3,cex=2,pch =3, xlim = c(0,10),xlab = "K",ylab = "relative difference for upper bounds",type="p")
-  lines(cste_mult_vect,relative_change_K2,col = 3,cex=2,pch=3, type="l")
-
-  lines(cste_mult_vect,relative_change_K2.5,col = 4,cex=2,pch=4, xlim = c(0,10),xlab = "K",ylab = "relative difference for upper bounds",type="p")
-  lines(cste_mult_vect,relative_change_K2.5,col = 4,cex=2,pch=4, type="l")
-
-  lines(cste_mult_vect,relative_change_K3,col = 5,cex=2,pch=0, xlim = c(0,10),xlab = "K",ylab = "relative difference for upper bounds",type="p")
-  lines(cste_mult_vect,relative_change_K3,col = 5,cex=2,pch=0, type="l")
-
-  lines(cste_mult_vect,relative_change_K3.5,col = 6,cex=3,pch=0, xlim = c(0,10),xlab = "K",ylab = "relative difference for upper bounds",type="p")
-  lines(cste_mult_vect,relative_change_K3.5,col = 6,cex=3,pch=0, type="l")
-
-  lines(cste_mult_vect,relative_change_Klog_n,col = 7,cex=3,pch=1, xlim = c(0,10),xlab = "K",ylab = "relative difference for upper bounds",type="p")
-  lines(cste_mult_vect,relative_change_Klog_n,col = 7,cex=3,pch=1, type="l")
-
-  lines(cste_mult_vect,relative_change_K4,col = 8,cex=3,pch=2, xlim = c(0,10),xlab = "K",ylab = "relative difference for upper bounds",type="p")
-  lines(cste_mult_vect,relative_change_K4,col = 8,cex=3,pch=2, type="l")
-
-  lines(cste_mult_vect,relative_change_K4.5,cex=3,pch=6,col = "#993300", xlim = c(0,10),xlab = "K",ylab = "relative difference for upper bounds",type="p")
-  lines(cste_mult_vect,relative_change_K4.5,cex=3,pch=6,col = "#993300", type="l")
-
-  lines(cste_mult_vect,relative_change_K5,cex=4,pch=1,col =  "#660099", xlim = c(0,10),xlab = "K",ylab = "relative difference for upper bounds",type="p")
-  lines(cste_mult_vect,relative_change_K5,cex=4,pch=1,col =  "#660099", type="l")
-
-  legend("topleft", legend = c("1","1.5","2","2.5","3","3.5","log(n)","4","4.5","5"),
-         col = c(1:8,"#993300","#660099"), cex=1.1, lwd = c(1,1,2,2,2,3,3,3,3,4),
-         pch = c(1,19,3,4,0,0,1,2,6,1),lty = rep(0,10))
+  par(mfrow=c(1,1))
+  plot(cste_mult_vect,relative_change_K1,col = colors[200], xlim = c(0,10),ylim = c(ymin,ymax),xlab = "K", ylab = NA, lty = 5,lwd=4,type="p",cex=1,pch=1,cex.lab = 1.8)
+  lines(cste_mult_vect,relative_change_K1,col = colors[200], type="l",cex=1,pch=1,cex.lab = 1.3,lty = 1,lwd=4)
+  lines(cste_mult_vect,relative_change_K1.5,col = colors[123],cex=1,pch=2, xlim = c(0,10),ylim = c(0,ymax),xlab = "K",ylab = "Relative standard deviation of the estimated upper bounds",type="p",cex.lab = 1.3)
+  lines(cste_mult_vect,relative_change_K1.5,col = colors[123],cex=1,pch=1, type="l",cex.lab = 1.3,lty = 1,lwd=4)
+  lines(cste_mult_vect,relative_change_K2,col = 3,cex=1,pch=3, xlim = c(0,10),ylim = c(0,ymax),xlab = "K",ylab = "Relative standard deviation of the estimated upper bounds",type="p",cex.lab = 1.3)
+  lines(cste_mult_vect,relative_change_K2,col = 3,cex=1,pch=1, type="l",cex.lab = 1.3,lty = 1,lwd=4)
+  lines(cste_mult_vect,relative_change_K2.5,col = colors[10],cex=1,pch=4, xlim = c(0,10),ylim = c(0,ymax),xlab = "K",ylab = "Relative standard deviation of the estimated upper bounds",type="p",cex.lab = 1.3)
+  lines(cste_mult_vect,relative_change_K2.5,col = colors[10],cex=1,pch=1, type="l",cex.lab = 1.3,lty = 1,lwd=4)
+  lines(cste_mult_vect,relative_change_K3,col = colors[160],cex=1,pch=5, xlim = c(0,10),ylim = c(0,ymax),xlab = "K",ylab = "Relative standard deviation of the estimated upper bounds",type="p",cex.lab = 1.3)
+  lines(cste_mult_vect,relative_change_K3,col = colors[160],cex=1,pch=1, type="l",cex.lab = 1.3,lty = 1,lwd=4)
+  lines(cste_mult_vect,relative_change_K3.5,col = colors[360],cex=1,pch=6, xlim = c(0,10),ylim = c(0,ymax),xlab = "K",ylab = "Relative standard deviation of the estimated upper bounds",type="p",cex.lab = 1.3)
+  lines(cste_mult_vect,relative_change_K3.5,col = colors[360],cex=1,pch=1, type="l",cex.lab = 1.3,lty = 1,lwd=4)
+  lines(cste_mult_vect,relative_change_K4,col = 6,cex=1,pch=7, xlim = c(0,10),ylim = c(0,ymax),xlab = "K",ylab = "Relative standard deviation of the estimated upper bounds",type="p",cex.lab = 1.3)
+  lines(cste_mult_vect,relative_change_K4,col = 6,cex=1,pch=1, type="l",cex.lab = 1.3,lty = 1,lwd=4)
+  lines(cste_mult_vect,relative_change_K4.5,col = 7,cex=1,pch=8, xlim = c(0,10),ylim = c(0,ymax),xlab = "K",ylab = "Relative standard deviation of the estimated upper bounds",type="p",cex.lab = 1.3)
+  lines(cste_mult_vect,relative_change_K4.5,col = 7,cex=1,pch=1, type="l",cex.lab = 1.3,lty = 1,lwd=4)
+  lines(cste_mult_vect,relative_change_Klog_n,col = 8,cex=1,pch=9, xlim = c(0,10),ylim = c(0,ymax),xlab = "K",ylab = "Relative standard deviation of the estimated upper bounds",type="p",cex.lab = 1.3)
+  lines(cste_mult_vect,relative_change_Klog_n,col = 8,cex=1,pch=1, type="l",cex.lab = 1.3,lty = 1,lwd=4)
+  lines(cste_mult_vect,relative_change_K5,cex=1,pch=10,col = "#660099",xlim = c(0,10),ylim = c(0,ymax),xlab = "K",ylab = "Relative standard deviation of the estimated upper bounds",type="p",cex.lab = 1.3)
+  lines(cste_mult_vect,relative_change_K5,cex=1,pch=10,col = "#660099",type="l",cex.lab = 1.3,lty = 1,lwd=4)
+  legend("topleft", legend = c(c("K=1","K=1.5","K=2","K=2.5","K=3","K=3.5","K=log(n)","K=4","K=4.5","K=5")),
+         col = c(colors[200],colors[123],3,colors[10],colors[160],colors[360],6,7,8,"#660099"), cex=1.8, lwd = rep(4,10), pch = c(1,2,3,4,5,6,7,8,9,10), lty = rep(1,10))
 }
+
 
 
 ###### Relative standard error of the estimated upper bounds functions with respect to K
 for (k in index_plot){
-  ###### Variance of estimators
   mean_upper_K1 <- c()
   mean_upper_K1.5 <- c()
   mean_upper_K2 <- c()
@@ -869,40 +764,28 @@ for (k in index_plot){
              relative_standard_error_K2.5,relative_standard_error_K3,relative_standard_error_K3.5,relative_standard_error_Klog_n,
              relative_standard_error_K4,relative_standard_error_K4.5,relative_standard_error_K5)
   par(mfrow=c(1,1))
-  plot(cste_mult_vect,relative_standard_error_K1,col = 1, xlim = c(0,10),ylim = c(0,ymax),
-       xlab = "K",ylab = NA, lty = 5,lwd=2,cex.lab = 1.3,type="p",cex=1,pch=1)
-  lines(cste_mult_vect,relative_standard_error_K1,col = 1, type="l",cex=1,pch=1)
-
-  lines(cste_mult_vect,relative_standard_error_K1.5,col = 2,cex=1,pch=19, xlim = c(0,10),ylim = c(0,ymax),xlab = "K",ylab = "Relative standard deviation of the estimated upper bounds",type="p")
-  lines(cste_mult_vect,relative_standard_error_K1.5,col = 2,cex=1,pch=19, type="l")
-
-  lines(cste_mult_vect,relative_standard_error_K2,col = 3,cex=2,pch=3, xlim = c(0,10),ylim = c(0,ymax),xlab = "K",ylab = "Relative standard deviation of the estimated upper bounds",type="p")
-  lines(cste_mult_vect,relative_standard_error_K2,col = 3,cex=2,pch=3, type="l")
-
-  lines(cste_mult_vect,relative_standard_error_K2.5,col = 4,cex=2,pch=4, xlim = c(0,10),ylim = c(0,ymax),xlab = "K",ylab = "Relative standard deviation of the estimated upper bounds",type="p")
-  lines(cste_mult_vect,relative_standard_error_K2.5,col = 4,cex=2,pch=4, type="l")
-
-  lines(cste_mult_vect,relative_standard_error_K3,col = 5,cex=2,pch=0, xlim = c(0,10),ylim = c(0,ymax),xlab = "K",ylab = "Relative standard deviation of the estimated upper bounds",type="p")
-  lines(cste_mult_vect,relative_standard_error_K3,col = 5,cex=2,pch=0, type="l")
-
-  lines(cste_mult_vect,relative_standard_error_K3.5,col = 6,cex=3,pch=0, xlim = c(0,10),ylim = c(0,ymax),xlab = "K",ylab = "Relative standard deviation of the estimated upper bounds",type="p")
-  lines(cste_mult_vect,relative_standard_error_K3.5,col = 6,cex=3,pch=0, type="l")
-
-  lines(cste_mult_vect,relative_standard_error_Klog_n,col = 7,cex=3,pch=1, xlim = c(0,10),ylim = c(0,ymax),xlab = "K",ylab = "Relative standard deviation of the estimated upper bounds",type="p")
-  lines(cste_mult_vect,relative_standard_error_Klog_n,col = 7,cex=3,pch=1, type="l")
-
-  lines(cste_mult_vect,relative_standard_error_K4,col = 8,cex=3,pch=2, xlim = c(0,10),ylim = c(0,ymax),xlab = "K",ylab = "Relative standard deviation of the estimated upper bounds",type="p")
-  lines(cste_mult_vect,relative_standard_error_K4,col = 8,cex=3,pch=2, type="l")
-
-  lines(cste_mult_vect,relative_standard_error_K4.5,col = "#993300",cex=3,pch=6, xlim = c(0,10),ylim = c(0,ymax),xlab = "K",ylab = "Relative standard deviation of the estimated upper bounds",type="p")
-  lines(cste_mult_vect,relative_standard_error_K4.5,col = "#993300",cex=3,pch=6, type="l")
-
-  lines(cste_mult_vect,relative_standard_error_K5,col = "#660099",cex=4,pch=1, xlim = c(0,10),ylim = c(0,ymax),xlab = "K",ylab = "Relative standard deviation of the estimated upper bounds",type="p")
-  lines(cste_mult_vect,relative_standard_error_K5,col = "#660099",cex=4,pch=1, type="l")
-
-  legend("topleft", legend = c("1","1.5","2","2.5","3","3.5","log(n)","4","4.5","5"),
-         col = c(1:8,"#993300","#660099"), cex=1.1, lwd = c(1,1,2,2,2,3,3,3,3,4),
-         pch = c(1,19,3,4,0,0,1,2,6,1),lty = rep(0,10))
+  plot(cste_mult_vect,relative_standard_error_K1,col = colors[200], xlim = c(0,10),ylim = c(0,ymax),xlab = "K", ylab = NA, lty = 5,lwd=4,type="p",cex=1,pch=1,cex.lab = 1.8)
+  lines(cste_mult_vect,relative_standard_error_K1,col = colors[200], type="l",cex=1,pch=1,cex.lab = 1.3,lty = 1,lwd=4)
+  lines(cste_mult_vect,relative_standard_error_K1.5,col = colors[123],cex=1,pch=2, xlim = c(0,10),ylim = c(0,ymax),xlab = "K",ylab = "Relative standard deviation of the estimated upper bounds",type="p",cex.lab = 1.3)
+  lines(cste_mult_vect,relative_standard_error_K1.5,col = colors[123],cex=1,pch=1, type="l",cex.lab = 1.3,lty = 1,lwd=4)
+  lines(cste_mult_vect,relative_standard_error_K2,col = 3,cex=1,pch=3, xlim = c(0,10),ylim = c(0,ymax),xlab = "K",ylab = "Relative standard deviation of the estimated upper bounds",type="p",cex.lab = 1.3)
+  lines(cste_mult_vect,relative_standard_error_K2,col = 3,cex=1,pch=1, type="l",cex.lab = 1.3,lty = 1,lwd=4)
+  lines(cste_mult_vect,relative_standard_error_K2.5,col = colors[10],cex=1,pch=4, xlim = c(0,10),ylim = c(0,ymax),xlab = "K",ylab = "Relative standard deviation of the estimated upper bounds",type="p",cex.lab = 1.3)
+  lines(cste_mult_vect,relative_standard_error_K2.5,col = colors[10],cex=1,pch=1, type="l",cex.lab = 1.3,lty = 1,lwd=4)
+  lines(cste_mult_vect,relative_standard_error_K3,col = colors[160],cex=1,pch=5, xlim = c(0,10),ylim = c(0,ymax),xlab = "K",ylab = "Relative standard deviation of the estimated upper bounds",type="p",cex.lab = 1.3)
+  lines(cste_mult_vect,relative_standard_error_K3,col = colors[160],cex=1,pch=1, type="l",cex.lab = 1.3,lty = 1,lwd=4)
+  lines(cste_mult_vect,relative_standard_error_K3.5,col = colors[360],cex=1,pch=6, xlim = c(0,10),ylim = c(0,ymax),xlab = "K",ylab = "Relative standard deviation of the estimated upper bounds",type="p",cex.lab = 1.3)
+  lines(cste_mult_vect,relative_standard_error_K3.5,col = colors[360],cex=1,pch=1, type="l",cex.lab = 1.3,lty = 1,lwd=4)
+  lines(cste_mult_vect,relative_standard_error_K4,col = 6,cex=1,pch=7, xlim = c(0,10),ylim = c(0,ymax),xlab = "K",ylab = "Relative standard deviation of the estimated upper bounds",type="p",cex.lab = 1.3)
+  lines(cste_mult_vect,relative_standard_error_K4,col = 6,cex=1,pch=1, type="l",cex.lab = 1.3,lty = 1,lwd=4)
+  lines(cste_mult_vect,relative_standard_error_K4.5,col = 7,cex=1,pch=8, xlim = c(0,10),ylim = c(0,ymax),xlab = "K",ylab = "Relative standard deviation of the estimated upper bounds",type="p",cex.lab = 1.3)
+  lines(cste_mult_vect,relative_standard_error_K4.5,col = 7,cex=1,pch=1, type="l",cex.lab = 1.3,lty = 1,lwd=4)
+  lines(cste_mult_vect,relative_standard_error_Klog_n,col = 8,cex=1,pch=9, xlim = c(0,10),ylim = c(0,ymax),xlab = "K",ylab = "Relative standard deviation of the estimated upper bounds",type="p",cex.lab = 1.3)
+  lines(cste_mult_vect,relative_standard_error_Klog_n,col = 8,cex=1,pch=1, type="l",cex.lab = 1.3,lty = 1,lwd=4)
+  lines(cste_mult_vect,relative_standard_error_K5,cex=1,pch=10,col = "#660099",xlim = c(0,10),ylim = c(0,ymax),xlab = "K",ylab = "Relative standard deviation of the estimated upper bounds",type="p",cex.lab = 1.3)
+  lines(cste_mult_vect,relative_standard_error_K5,cex=1,pch=10,col = "#660099",type="l",cex.lab = 1.3,lty = 1,lwd=4)
+  legend("topleft", legend = c(c("K=1","K=1.5","K=2","K=2.5","K=3","K=3.5","K=log(n)","K=4","K=4.5","K=5")),
+         col = c(colors[200],colors[123],3,colors[10],colors[160],colors[360],6,7,8,"#660099"), cex=1.8, lwd = rep(4,10), pch = c(1,2,3,4,5,6,7,8,9,10), lty = rep(1,10))
 }
 
 
